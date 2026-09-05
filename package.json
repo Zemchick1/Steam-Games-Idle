@@ -10,6 +10,7 @@
   "dependencies": {
     "colors": "1.4.0",
     "console-master": "1.0.3",
+    "dotenv": "16.4.5",
     "moment": "2.28.0",
     "request": "2.88.0",
     "request-promise": "4.2.6",
@@ -21,7 +22,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "title Refloow / Steam-Games-Idle & node index.js pause"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",

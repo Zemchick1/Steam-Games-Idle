@@ -68,17 +68,33 @@ const method = require('./methods');
 // Name of the client
 const refloowidle = new SteamUser();
 
-// Login options for auto login (auto generating 2fa codes)
-const LogOnOptionsAUTO = {
-	accountName: config.loginAccName,
-	password: config.password,
-	twoFactorCode: SteamTotp.generateAuthCode(config.shared_secret)
-}
-// Login options for manual login (auto generating 2fa codes disabled)
-const LogOnOptionsMANUAL = {
-	accountName: config.loginAccName,
-	password: config.password,
-}
+// Handles Steam Guard email/mobile codes when no shared_secret is configured.
+// On a headless host (e.g. Railway) there's no terminal to type a code into, so
+// this only works when run locally with an interactive stdin. Use it once to
+// obtain a refresh token (see the 'refreshToken' event below), then set
+// STEAM_REFRESH_TOKEN so future logins skip Steam Guard entirely.
+const readline = require('readline');
+refloowidle.on('steamGuard', (domain, callback, lastCodeWrong) => {
+	if (!process.stdin.isTTY) {
+		Console.error('| [STEAM GUARD] |: A Steam Guard code is required but this is a non-interactive environment. Run the bot locally once with STEAM_USERNAME/STEAM_PASSWORD set to obtain a refresh token, then set STEAM_REFRESH_TOKEN.');
+		return;
+	}
+	const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+	const prompt = domain
+		? `Enter the Steam Guard code emailed to you (ending in ${domain}): `
+		: 'Enter your Steam Guard mobile authenticator code: ';
+	rl.question(lastCodeWrong ? `That code was wrong. ${prompt}` : prompt, code => {
+		rl.close();
+		callback(code.trim());
+	});
+});
+
+// Emitted after any successful account name + password login. Save this value as
+// STEAM_REFRESH_TOKEN in Railway to log in without Steam Guard for ~200 days.
+refloowidle.on('refreshToken', token => {
+	Console.true('| [STEAM] | REFRESH TOKEN |: Save this as STEAM_REFRESH_TOKEN to skip Steam Guard next time:');
+	console.log(token);
+});
 
 // Checking for correct version (updates) for bot on github
 if(method.UpdateNotifDisable()) {
@@ -87,16 +103,27 @@ if(method.UpdateNotifDisable()) {
 
 // APP START
 
-// If auto generate method is used use options for login auto
-if(method.AutoGenerateLoginCodes())
-    {
-    refloowidle.logOn(LogOnOptionsAUTO);
+function pickLogOnOptions() {
+	// Individually using a refresh token skips Steam Guard entirely (recommended for Railway).
+	if (config.refreshToken) {
+		return { refreshToken: config.refreshToken };
+	}
+	// Auto-generating 2fa codes requires a shared_secret.
+	if (method.AutoGenerateLoginCodes() && config.shared_secret) {
+		return {
+			accountName: config.loginAccName,
+			password: config.password,
+			twoFactorCode: SteamTotp.generateAuthCode(config.shared_secret)
+		};
+	}
+	// Falls back to the 'steamGuard' event above for a manually entered code.
+	return {
+		accountName: config.loginAccName,
+		password: config.password,
+	};
 }
-// If auto generate method is disabled use options for login manual
-if(!method.AutoGenerateLoginCodes())
-	{
-    refloowidle.logOn(LogOnOptionsMANUAL);
-}
+
+refloowidle.logOn(pickLogOnOptions());
 
 	function a(){
 	    var items = config.GameToIdleFor;

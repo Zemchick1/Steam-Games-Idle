@@ -32,22 +32,30 @@ Discord Support Server: https://discord.gg/D8WCtDD   (Open an ticket)
 
 
     // Bot Account Information //
+    // These read from environment variables first (set them in Railway's Variables tab),
+    // falling back to the hardcoded strings below for local runs.
 
-    loginAccName: '',
-    password: '',
+    loginAccName: process.env.STEAM_USERNAME || '',
+    password: process.env.STEAM_PASSWORD || '',
     // Leave empty if account dont have 2fa auth. // If you leave shared_secret empty configure steamguardauto false to manualy enter codes.
-    shared_secret: '',
+    shared_secret: process.env.STEAM_SHARED_SECRET || '',
+    // Obtained by running the bot once locally (see the 'refreshToken' console log after a
+    // successful login). When set, this skips Steam Guard entirely — required for headless
+    // hosts like Railway if you don't have a shared_secret. Valid for ~200 days.
+    refreshToken: process.env.STEAM_REFRESH_TOKEN || '',
 
     // Enable or disable | [true / false] automaticly generating 2fa codes for loging into account.
-    SteamGuardAuto: true,
+    SteamGuardAuto: (process.env.STEAM_GUARD_AUTO || 'true') === 'true',
     // Enable or disable | [true / false] Showing update notifications in console for new version
-    UpdateNotif_Enable: true, 
+    UpdateNotif_Enable: true,
 
-	
+
 	// Settings //
-	
+
         Interval: 50000,     // Interval in milisec (how much time shod pass before switching idling for another game)
-	GameToIdleFor: [440], // ID For game that bot will idle for EXAMPLE: [440,730,...] Make sure to have game in library.
+	GameToIdleFor: process.env.GAME_IDS
+		? process.env.GAME_IDS.split(',').map(id => id.trim())
+		: [440], // ID For game that bot will idle for EXAMPLE: [440,730,...] Make sure to have game in library.
 
 	// Some of popular game ids //
 

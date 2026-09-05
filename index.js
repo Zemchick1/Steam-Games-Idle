@@ -81,6 +81,10 @@ the original license and copyright notice is licence agreement breach and its co
 */
 
 
+// Loads variables from a local .env file into process.env (no-op on Railway, which
+// injects its own env vars directly; only matters for local runs).
+require('dotenv').config();
+
 // Checking if required modules are properly installed
 
 try {
