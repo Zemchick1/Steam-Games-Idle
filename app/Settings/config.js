@@ -54,7 +54,13 @@ Discord Support Server: https://discord.gg/D8WCtDD   (Open an ticket)
 
         Interval: 50000,     // Interval in milisec (how much time shod pass before switching idling for another game)
 	GameToIdleFor: process.env.GAME_IDS
-		? process.env.GAME_IDS.split(',').map(id => id.trim())
+		? process.env.GAME_IDS.split(',').map(id => {
+			const trimmed = id.trim();
+			const asNumber = Number(trimmed);
+			// Numeric App IDs must stay numbers — Steam idles a real game only when given a
+			// number; a string is shown as a fake "non-Steam game" status instead (see below).
+			return trimmed !== '' && Number.isFinite(asNumber) ? asNumber : trimmed;
+		})
 		: [440], // ID For game that bot will idle for EXAMPLE: [440,730,...] Make sure to have game in library.
 
 	// Some of popular game ids //
