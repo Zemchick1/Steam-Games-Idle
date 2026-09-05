@@ -7,6 +7,9 @@
     "url": "https://github.com/Refloow/Steam-Games-Idle/issues"
   },
   "homepage": "https://github.com/Refloow/Steam-Games-Idle",
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "colors": "1.4.0",
     "console-master": "1.0.3",
